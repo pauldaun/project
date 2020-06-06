@@ -1,0 +1,265 @@
+// customer-parth.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
+//
+
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#pragma comment(lib, "ws2_32.lib")
+#include <winsock2.h>
+#include <iostream>
+#include <stdlib.h>
+#include <fstream>
+#include <iomanip>
+#include <strstream>
+#include <Windows.h>
+using namespace std;
+#pragma warning(disable: 4996)
+namespace spos {
+	std::string shifr(std::string password) {
+		int l = password.length();
+		for (int i = 0; i < l; i++)
+			password[i] = password[i] + 5;
+		return password;
+	}
+	std::string deshifr(std::string password) {
+		int l = password.length();
+		for (int i = 0; i < l; i++)
+			password[i] = password[i] - 5;
+		return password;
+	}
+
+	int check_int(int choice, int max_numb)
+	{
+		while (!(std::cin >> choice) || (std::cin.peek() != '\n') || (choice < 0) || (choice > max_numb))
+		{
+			std::cin.clear();
+			while (std::cin.get() != '\n');
+			std::cout << "Повторите ввод!" << std::endl;
+		}
+		return choice;
+	}
+}
+int main()
+{
+	system("chcp 1251");
+	setlocale(LC_ALL, "Russian");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	char* login, * passw;
+	char ch = '2';
+	while (true) {
+
+		WSADATA wsaData;
+		WORD wVersionRequested = MAKEWORD(2, 1);
+		if (WSAStartup(wVersionRequested, &wsaData) != 0) {
+			cout << "Error" << endl;
+			exit(1);
+		}
+
+		struct sockaddr_in addr;
+		int sizeofaddr = sizeof(addr);
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(1111);//1280
+		addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+		SOCKET Connection = socket(AF_INET, SOCK_STREAM, NULL);
+
+
+		if (connect(Connection, (sockaddr*)&addr, sizeof(addr)) != 0) {
+			cout << "Error:failed connect to server" << endl;
+			return 1;
+		}
+		char choise = '0';
+		char msg[40];
+
+
+		while (true) {
+			cout << "Выберите действие:" << endl <<
+				"1.Регистрация" << endl <<
+				"2.Вход пользователя" << endl <<
+				"3.Выход" << endl;
+			cin >> choise;
+
+			send(Connection, &choise, sizeof(choise), NULL);
+			if (choise == '1') {
+				cout << "Введите логин и пароль:" << endl;
+				string s_login, s_passw;
+				cout << "Login:" << endl; cin >> s_login; int len_log = s_login.length();
+				cout << "Password:" << endl; cin >> s_passw; int len_pas = s_passw.length();
+				login = new char[len_log];
+				passw = new char[len_pas];
+				strcpy(login, s_login.c_str());
+				strcpy(passw, s_passw.c_str());
+				send(Connection, login, strlen(login), NULL);
+				send(Connection, passw, strlen(passw), NULL);
+
+				recv(Connection, &ch, sizeof(ch), NULL);
+				if (ch == '1') cout << "Регистрация прошла успешно!" << endl;
+				else  cout << "Ошибка регистрации!" << endl;
+
+			}
+			if (choise == '2') {
+				cout << "Введите логин и пароль:" << endl;
+				string s_login, s_passw;
+				cout << "Login:" << endl; cin >> s_login; int len_log = s_login.length();
+				cout << "Password:" << endl; cin >> s_passw; int len_pas = s_passw.length();
+				char clen_log[2]; itoa(len_log, clen_log, 10);
+				char clen_pas[2]; itoa(len_pas, clen_pas, 10);
+				send(Connection, clen_log, sizeof(clen_log), NULL);
+				send(Connection, clen_pas, sizeof(clen_pas), NULL);
+				login = new char[len_log];
+				passw = new char[len_pas];
+				strcpy(login, s_login.c_str());
+				strcpy(passw, s_passw.c_str());
+				send(Connection, login, strlen(login), NULL);
+				send(Connection, passw, strlen(passw), NULL);
+
+				recv(Connection, &ch, sizeof(ch), NULL);
+				if (ch == '1') {
+					while (true) {
+						cout << "Меню:" << endl
+							<< "1. Информация о печатном издательстве." << endl
+							<< "2. Заказ" << endl
+							<< "3. Редактировать свой логин и пароль" << endl
+							<< "4. Выход." << endl;
+						cin >> choise;
+						send(Connection, &choise, sizeof(choise), NULL);
+						if (choise == '1') {
+							char m1[2], m2[2], m3[2];
+							recv(Connection, m1, sizeof(m1), NULL);
+							int k1 = atoi(m1);
+							recv(Connection, m2, sizeof(m2), NULL);
+							int k2 = atoi(m2);
+							recv(Connection, m3, sizeof(m3), NULL);
+							int k3 = atoi(m3);
+							char mm1[50] = {}, mm2[50] = {}, mm3[50] = {};
+							recv(Connection, mm1, k1, NULL);
+							recv(Connection, mm2, k2, NULL);
+							recv(Connection, mm3, k3, NULL);
+							cout << "Название: ";
+							string s1 = mm1;
+							cout << s1 << endl;
+							cout << "Адрес: ";
+							cout << mm2 << endl;
+							cout << "Контакты: ";
+							cout << mm3 << endl;
+						}
+						if (choise == '2') {
+
+							char R2[3];
+							cout << "---------------------------------------------------------------------------------------------------------------------" << endl;
+							cout << setw(25) << "Занимаемая должность |" << setw(30) << "Не работал в этой сфере |" << setw(30) << "Работал в этой сфере |" << setw(32) << "Постоянно работаю в этой сфере |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(25) << "Художник |" << setw(30) << "1 |" << setw(30) << "- |" << setw(32) << "- |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(25) << "Маркетолог |" << setw(30) << "3 |" << setw(30) << "4 |" << setw(32) << "5 |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(25) << "Креатив. директор |" << setw(30) << "5 |" << setw(30) << "7 |" << setw(32) << "10 |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl;
+							cout << "Введите значение,находящееся на перекрестии: ";
+							cin >> R2;
+
+							send(Connection, R2, sizeof(R2), NULL);
+
+							cout << endl << "---------------------------------------------------------------------------------------------------------------------" << endl;
+							cout << setw(52) << "Источники аргументаций |" << setw(65) << "Степень влияния источника на ваше мнение |" << endl <<
+								setw(52) << " |" << "-----------------------------------------------------------------" << endl <<
+								setw(52) << " |" << setw(22) << "высокая |" << setw(21) << "средняя |" << setw(22) << "низкая |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(52) << "Проведенный вами теоретический анализ |" << setw(22) << "0.3 |" << setw(21) << "0.2 |" << setw(22) << "0.1 |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(52) << "Ваш производственный опыт |" << setw(22) << "0.5 |" << setw(21) << "0.4 |" << setw(22) << "0.2 |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(52) << "Обобщение работ зарубежных авторов |" << setw(22) << "0.05 |" << setw(21) << "0.05 |" << setw(22) << "0.05 |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(52) << "Ваше личное знакомство с состояниемдел за рубежом |" << setw(22) << "0.05 |" << setw(21) << "0.05 |" << setw(22) << "0.05 |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl <<
+								setw(52) << "Ваша интуиция |" << setw(22) << "0.05 |" << setw(21) << "0.05 |" << setw(22) << "0.05 |" << endl <<
+								"---------------------------------------------------------------------------------------------------------------------" << endl;
+
+							char r1[4], r2[4];
+							cout << "Введите оценки по критериям: " << endl <<
+								"Проведенный вами теоретический анализ: ";
+							cin >> r1;
+							send(Connection, r1, sizeof(r1), NULL);
+							cout << endl << "Ваш производственный опыт: ";
+							cin >> r2;
+							send(Connection, r2, sizeof(r2), NULL);
+							char o1[4], o2[4], o3[4];
+							cout << "Выставьте ваши оценки важности критериев от 0 до 1!" << endl;
+							cout << "Стоимость: "; cin >> o1;
+							cout << "Размер (от А6  до А1): ";  cin >> o2;
+							cout << "Насыщенность цвета краски: "; cin >> o3;
+							char sr2[5];
+							send(Connection, o1, sizeof(o1), NULL);
+							send(Connection, o2, sizeof(o2), NULL);
+							send(Connection, o3, sizeof(o3), NULL);
+							char ch[2];
+							recv(Connection, ch, sizeof(ch), NULL);
+							cout << "Наиболее подходящий вариант книги для вас:" << endl;
+							if (*ch == '1') {
+								cout << "1.Книга не большого размера (А5-А6) в мягком переплете со средней плотностью бумаги и низкой насыщенностью цвета краски." << endl;
+							}
+							if (*ch == '2') {
+								cout << "1.Книга размера А4 в мягком или твердом переплете со средней плотностью бумаги и средней насыщенностью цвета краски." << endl;
+							}
+							if (*ch == '3') {
+								cout << "1.Книга размера (А5-А6) в мягком переплете со средней плотностью бумаги и насыщенностыми картинками и четким текстом." << endl;
+							}
+							cout << "Вас устраивает данный вариант?" << endl; cin >> ch;
+							system("pause");
+						}
+						if (choise == '3') {
+							cout << "Введите логин и пароль:" << endl;
+							string s_login, s_passw, s_login2, s_passw2;
+							cout << "Login:" << endl; cin >> s_login; int len_log = s_login.length();
+							cout << "Password:" << endl; cin >> s_passw; int len_pas = s_passw.length();
+							cout << "Введите новые логин и пароль:" << endl;
+							cout << "Login:" << endl; cin >> s_login2; int len_log2 = s_login2.length();
+							cout << "Password:" << endl; cin >> s_passw2; int len_pas2 = s_passw2.length();
+							login = new char[len_log];
+							passw = new char[len_pas];
+							char* login2 = new char[len_log2];
+							char* passw2 = new char[len_pas2];
+							char clen_log[2]; itoa(len_log, clen_log, 10);
+							char clen_pas[2]; itoa(len_pas, clen_pas, 10);
+							send(Connection, clen_log, sizeof(clen_log), NULL);
+							send(Connection, clen_pas, sizeof(clen_pas), NULL);
+							char clen_log2[2]; itoa(len_log2, clen_log2, 10);
+							char clen_pas2[2]; itoa(len_pas2, clen_pas2, 10);
+							send(Connection, clen_log2, sizeof(clen_log2), NULL);
+							send(Connection, clen_pas2, sizeof(clen_pas2), NULL);
+							login = new char[len_log];
+							passw = new char[len_pas];
+							login2 = new char[len_log2];
+							passw2 = new char[len_pas2];
+							strcpy(login, s_login.c_str());
+							strcpy(passw, s_passw.c_str());
+							strcpy(login2, s_login2.c_str());
+							strcpy(passw2, s_passw2.c_str());
+							send(Connection, login, strlen(login), NULL);
+							send(Connection, passw, strlen(passw), NULL);
+							send(Connection, login2, strlen(login2), NULL);
+							send(Connection, passw2, strlen(passw2), NULL);
+
+							recv(Connection, &ch, sizeof(ch), NULL);
+							if (ch == '1') cout << "Редактирование прошло успешно!" << endl;
+							else  cout << "Ошибка редактирования!" << endl;
+
+
+						}
+						if (choise == '4') { break; }
+					}
+				}
+				else cout << "Неправильный логин или пароль!" << endl;
+			}
+
+			if (choise == '3') {
+				return 0;
+			}
+
+		}
+		closesocket(Connection);
+		WSACleanup();
+		system("pause");
+		return 0;
+	}
+}
